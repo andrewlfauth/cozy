@@ -15,24 +15,7 @@ const { title} = Astro.props
       name="description"
     />
     <meta name="generator" content={Astro.generator} />
-
-    <script>
-      window.addEventListener('DOMContentLoaded', (e) => {
-        const url = window.location.href
-
-        fetch('http://localhost:8000/cozy-api/page-views', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            pageUrl: url,
-            // website id
-          })
-        })
-      })
-    </script>
-
+    <script data-domain="http://test-site.com" src="http://localhost:8000/tracking.js"></script>
     <title>{title}</title>
   </head>
   <body>
