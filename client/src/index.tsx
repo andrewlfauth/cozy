@@ -3,11 +3,18 @@ import { Hono } from 'hono'
 import Home from './pages/Home'
 import ValidationAlert from './components/ValidationAlert'
 import CopySnip from './components/CopySnip'
+import { readonlyPrisma } from './db'
 
 const app = new Hono()
 
-app.get('/', (c) => {
-  return c.html(<Home />)
+app.get('/', async (c) => {
+  try {
+    const trackedWebsites = await readonlyPrisma.website.findMany()
+    const trackedDomains = trackedWebsites.map((w) => w.name)
+    return c.html(<Home trackedDomains={trackedDomains} />)
+  } catch (error) {
+    return c.html(<Home />)
+  }
 })
 
 app.post('/register', async (c) => {
