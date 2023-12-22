@@ -40,14 +40,38 @@ app.post('/register-site', async (req, res) => {
   })
 })
 
-app.post('/cozy-api/page-views', (req: Request, res: Response) => {
-  const { pageUrl, trackingDomain } = req.body
+app.post('/cozy-api/page-views', async (req: Request, res: Response) => {
+  const { pageUrl: visitedPage, trackingDomain } = req.body
 
-  if (!pageUrl || !trackingDomain) {
+  if (!visitedPage || !trackingDomain) {
     return res.status(400).json({ error: 'Missing required data' })
   }
 
-  res.json({ success: true, message: 'Page view registered successfully' })
+  try {
+    const websiteEntry = await prisma.website.findFirst({
+      where: {
+        name: 'andrewfauth.dev',
+      },
+    })
+
+    if (!websiteEntry) {
+      res.status(401)
+    }
+
+    await prisma.pageView.create({
+      data: {
+        url: visitedPage,
+        website_id: websiteEntry?.id!,
+      },
+    })
+  } catch (error) {
+    console.log(`Error tracking page view: ${error}`)
+    res.status(500)
+  }
+
+  res
+    .status(200)
+    .json({ success: true, message: 'Page view registered successfully' })
 })
 
 app.listen(port, () => {
