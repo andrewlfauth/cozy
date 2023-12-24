@@ -19,21 +19,20 @@ app.get('/', async (c) => {
 
 app.post('/register', async (c) => {
   const { trackingDomain } = await c.req.parseBody()
-  const isValidDomain = /^([a-zA-Z0-9_-]+\.)+[a-zA-Z]{2,}$/.test(
-    trackingDomain as string
-  )
 
   if (!trackingDomain) {
     return c.html(
       <ValidationAlert text="Provide a website domain." variant="danger" />
     )
   }
-  if (!isValidDomain) {
+
+  const alreadyTracking = await readonlyPrisma.website.findFirst({
+    where: { name: trackingDomain as string },
+  })
+
+  if (alreadyTracking) {
     return c.html(
-      <ValidationAlert
-        text="Provide a valid domain ex. mysite.com"
-        variant="danger"
-      />
+      <ValidationAlert text="Already tracking that domain." variant="danger" />
     )
   }
 
