@@ -4,6 +4,8 @@ import Home from './pages/Home'
 import ValidationAlert from './components/ValidationAlert'
 import CopySnip from './components/CopySnip'
 import { readonlyPrisma } from './db'
+import DomainPage from './pages/DomainPage'
+import ErrorPage from './pages/ErrorPage'
 
 const app = new Hono()
 
@@ -60,6 +62,57 @@ app.post('/register', async (c) => {
       <CopySnip text='<script data-domain="mydomain.com" src="http://localhost:8000/tracking.js></script>' />
     </>
   )
+})
+
+app.get('/domains', async (c) => {
+  try {
+    const { name: domainName } = c.req.query()
+
+    if (!domainName) {
+      return c.redirect('/')
+    }
+
+    const websiteEntry = await readonlyPrisma.website.findFirst({
+      where: {
+        name: domainName,
+      },
+    })
+
+    if (!websiteEntry) {
+      return c.html(
+        <ErrorPage errorMsg={`Couldn't find tracking data for ${domainName}`} />
+      )
+    }
+
+    const last30DaysPageViews = await readonlyPrisma.pageView.findMany({
+      where: {
+        website_id: websiteEntry.id,
+        timestamp: {
+          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // last 30 days
+        },
+      },
+    })
+
+    const pageViewsByUrl = last30DaysPageViews.reduce((acc, pageview) => {
+      acc.set(pageview.url, (acc.get(pageview.url) || 0) + 1)
+      return acc
+    }, new Map<string, number>())
+
+    const totalPageViews = Array.from(pageViewsByUrl.values()).reduce(
+      (total, count) => total + count,
+      0
+    )
+    return c.html(
+      <DomainPage
+        domainName={domainName}
+        websiteId={websiteEntry.id}
+        totalPageViewsOverLast30Days={totalPageViews}
+        urlPageViewsMap={pageViewsByUrl}
+      />
+    )
+  } catch (error) {
+    return c.html(<ErrorPage errorMsg={'Failed to load tracking data...'} />)
+  }
 })
 
 serve(app)
