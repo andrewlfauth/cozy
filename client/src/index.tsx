@@ -64,9 +64,9 @@ app.post('/register', async (c) => {
   )
 })
 
-app.get('/domains', async (c) => {
+app.get('/domains/:name', async (c) => {
   try {
-    const { name: domainName } = c.req.query()
+    const domainName = c.req.param('name')
 
     if (!domainName) {
       return c.redirect('/')

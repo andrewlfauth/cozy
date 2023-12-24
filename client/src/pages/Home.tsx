@@ -32,7 +32,7 @@ function Home({ trackedDomains }: Props) {
         <div class="flex flex-wrap gap-8">
           {trackedDomains.map((domain) => (
             <a
-              href={`/domains?name=${domain}`}
+              href={`/domains/${domain}`}
               hx-boost="true"
               class="text-xl font-semibold rounded-md border-2 border-zinc-500 py-6 px-10 w-fit cursor-pointer hover:border-pink-500"
             >
