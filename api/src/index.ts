@@ -50,7 +50,7 @@ app.post('/cozy-api/page-views', async (req: Request, res: Response) => {
   try {
     const websiteEntry = await prisma.website.findFirst({
       where: {
-        name: 'andrewfauth.dev',
+        name: trackingDomain,
       },
     })
 
