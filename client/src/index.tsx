@@ -6,6 +6,7 @@ import CopySnip from './components/CopySnip'
 import { readonlyPrisma } from './db'
 import DomainPage from './pages/DomainPage'
 import ErrorPage from './pages/ErrorPage'
+import PageViewsPage from './pages/PageViewsPage'
 
 const app = new Hono()
 
@@ -64,9 +65,10 @@ app.post('/register', async (c) => {
   )
 })
 
-app.get('/domains/:name', async (c) => {
+app.get('/domains/:name/*', async (c) => {
   try {
     const domainName = c.req.param('name')
+    let days = c.req.query().days ?? 30
 
     if (!domainName) {
       return c.redirect('/')
@@ -84,16 +86,16 @@ app.get('/domains/:name', async (c) => {
       )
     }
 
-    const last30DaysPageViews = await readonlyPrisma.pageView.findMany({
+    const pageViewsOverDaysBack = await readonlyPrisma.pageView.findMany({
       where: {
         website_id: websiteEntry.id,
         timestamp: {
-          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // last 30 days
+          gte: new Date(Date.now() - Number(days) * 24 * 60 * 60 * 1000),
         },
       },
     })
 
-    const pageViewsByUrl = last30DaysPageViews.reduce((acc, pageview) => {
+    const pageViewsByUrl = pageViewsOverDaysBack.reduce((acc, pageview) => {
       acc.set(pageview.url, (acc.get(pageview.url) || 0) + 1)
       return acc
     }, new Map<string, number>())
@@ -106,7 +108,8 @@ app.get('/domains/:name', async (c) => {
       <DomainPage
         domainName={domainName}
         websiteId={websiteEntry.id}
-        totalPageViewsOverLast30Days={totalPageViews}
+        daysBack={Number(days)}
+        totalPageViewsOverDaysBack={totalPageViews}
         urlPageViewsMap={pageViewsByUrl}
       />
     )
