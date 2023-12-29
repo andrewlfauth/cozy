@@ -6,7 +6,11 @@ interface Props {
 
 function EventCard({ eventTitle, eventCount, href }: Props) {
   return href ? (
-    <a href={href} class="flex border-2 rounded-md group hover:border-pink-500">
+    <a
+      hx-boost="true"
+      href={href}
+      class="flex border-2 rounded-md group hover:border-pink-500"
+    >
       <p class="text-lg px-6 py-3 group-hover:text-pink-500 font-mono">
         {eventTitle}
       </p>
